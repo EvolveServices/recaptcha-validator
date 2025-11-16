@@ -4,13 +4,38 @@ const axios = require('axios');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
+
+// Log everything on startup
+console.log('=================================');
+console.log('Starting reCAPTCHA Validator');
+console.log('=================================');
+console.log('Node Version:', process.version);
+console.log('Environment:', process.env.NODE_ENV);
+console.log('Port:', PORT);
+console.log('Admin Token:', ADMIN_TOKEN ? 'SET' : 'MISSING');
+console.log('=================================');
+
+if (!ADMIN_TOKEN) {
+  console.error('FATAL: ADMIN_TOKEN not set');
+  process.exit(1);
+}
 
 app.use(express.json());
 app.use(cors({ origin: '*' }));
 
 const sites = new Map();
 
+app.get('/', (req, res) => {
+  res.json({ 
+    service: 'reCAPTCHA Validator',
+    status: 'running',
+    version: '1.0.0'
+  });
+});
+
 app.get('/health', (req, res) => {
+  console.log('Health check');
   res.json({ status: 'ok', sites: sites.size });
 });
 
@@ -18,19 +43,19 @@ app.post('/api/admin/register', (req, res) => {
   const { domain, siteKey, secretKey } = req.body;
   const adminToken = req.headers['x-admin-token'];
   
-  if (adminToken !== process.env.ADMIN_TOKEN) {
+  if (adminToken !== ADMIN_TOKEN) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   
   sites.set(siteKey, { domain, secretKey, createdAt: new Date().toISOString() });
-  console.log(`✅ Registered: ${domain}`);
+  console.log('Registered:', domain);
   res.json({ success: true, domain, siteKey });
 });
 
 app.get('/api/admin/sites', (req, res) => {
   const adminToken = req.headers['x-admin-token'];
   
-  if (adminToken !== process.env.ADMIN_TOKEN) {
+  if (adminToken !== ADMIN_TOKEN) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   
@@ -61,7 +86,7 @@ app.post('/api/verify', async (req, res) => {
     );
     
     const { success, score, action } = verifyResponse.data;
-    console.log(`Verify ${site.domain}: score=${score}`);
+    console.log('Verify', site.domain, 'score:', score);
     
     res.json({
       success,
@@ -76,17 +101,19 @@ app.post('/api/verify', async (req, res) => {
   }
 });
 
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running on ${PORT}`);
-  console.log(`📊 Sites: ${sites.size}`);
+app.use((req, res) => {
+  res.status(404).json({ error: 'Not found' });
 });
-```
 
-## Step 3: Verify Environment Variables
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log('=================================');
+  console.log('Server listening on 0.0.0.0:' + PORT);
+  console.log('Registered sites:', sites.size);
+  console.log('=================================');
+});
 
-In Coolify → **Environment Variables** tab, confirm you have:
-```
-ADMIN_TOKEN=prefix_prod_sec_xxxxxxxxxxxxx
-PORT=3000
-NODE_ENV=production
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down...');
+  server.close(() => {
+    console.log('Server closed');
+    pr
