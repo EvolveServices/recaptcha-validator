@@ -76,34 +76,17 @@ app.post('/api/verify', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running on ${PORT}`);
+  console.log(`📊 Sites: ${sites.size}`);
 });
 ```
 
-Push these to your repo.
+## Step 3: Verify Environment Variables
 
-## Step 2: Deploy in Coolify UI
-
-### Add New Resource
-1. Go to your Coolify dashboard
-2. Click **"+ Add"** or **"New Resource"**
-3. Select **"Application"**
-
-### Configure Source
-1. **Source**: Choose your Git provider (GitHub/GitLab/Gitea)
-2. **Repository**: Select the repo you just created
-3. **Branch**: `main` or `master`
-4. **Build Pack**: Coolify should auto-detect **Nixpacks** (Node.js)
-
-### Configure Application
-1. **Name**: `recaptcha-validator`
-2. **Port**: `3000`
-3. **Start Command**: Leave empty (uses npm start)
-
-### Environment Variables
-Click **"Environment Variables"** tab and add:
+In Coolify → **Environment Variables** tab, confirm you have:
 ```
-ADMIN_TOKEN=your-super-secret-token-change-this-now
+ADMIN_TOKEN=prefix_prod_sec_xxxxxxxxxxxxx
 PORT=3000
 NODE_ENV=production
