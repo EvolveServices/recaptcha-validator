@@ -1,11 +1,14 @@
 FROM node:18-alpine
 
+# Install curl for healthcheck
+RUN apk add --no-cache curl
+
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies - use npm install instead of npm ci
+# Install dependencies
 RUN npm install --production
 
 # Copy application files
@@ -14,9 +17,9 @@ COPY . .
 # Expose port
 EXPOSE 3000
 
-# Health check
+# Health check using curl
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+  CMD curl -f http://localhost:3000/health || exit 1
 
 # Start application
 CMD ["node", "server.js"]
