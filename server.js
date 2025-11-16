@@ -6,12 +6,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
 
-// Log everything on startup
 console.log('=================================');
 console.log('Starting reCAPTCHA Validator');
-console.log('=================================');
-console.log('Node Version:', process.version);
-console.log('Environment:', process.env.NODE_ENV);
 console.log('Port:', PORT);
 console.log('Admin Token:', ADMIN_TOKEN ? 'SET' : 'MISSING');
 console.log('=================================');
@@ -27,15 +23,10 @@ app.use(cors({ origin: '*' }));
 const sites = new Map();
 
 app.get('/', (req, res) => {
-  res.json({ 
-    service: 'reCAPTCHA Validator',
-    status: 'running',
-    version: '1.0.0'
-  });
+  res.json({ service: 'reCAPTCHA Validator', status: 'running' });
 });
 
 app.get('/health', (req, res) => {
-  console.log('Health check');
   res.json({ status: 'ok', sites: sites.size });
 });
 
@@ -60,7 +51,9 @@ app.get('/api/admin/sites', (req, res) => {
   }
   
   const siteList = Array.from(sites.entries()).map(([siteKey, data]) => ({
-    siteKey, domain: data.domain, createdAt: data.createdAt
+    siteKey,
+    domain: data.domain,
+    createdAt: data.createdAt
   }));
   
   res.json({ sites: siteList, count: siteList.length });
@@ -94,26 +87,12 @@ app.post('/api/verify', async (req, res) => {
       action,
       isHuman: success && score >= 0.5
     });
-    
   } catch (error) {
     console.error('Error:', error.message);
     res.status(500).json({ success: false, error: 'Verification failed' });
   }
 });
 
-app.use((req, res) => {
-  res.status(404).json({ error: 'Not found' });
+app.listen(PORT, '0.0.0.0', () => {
+  console.log('Server listening on port', PORT);
 });
-
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log('=================================');
-  console.log('Server listening on 0.0.0.0:' + PORT);
-  console.log('Registered sites:', sites.size);
-  console.log('=================================');
-});
-
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down...');
-  server.close(() => {
-    console.log('Server closed');
-    pr
