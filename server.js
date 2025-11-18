@@ -17,14 +17,18 @@ if (!ADMIN_TOKEN) {
   process.exit(1);
 }
 
-app.use(express.json());
-// UPDATED CORS - Allow all origins
+// CORS configuration - MUST be before routes
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'x-admin-token'],
   credentials: false
 }));
+
+app.use(express.json());
+
+// Explicit OPTIONS handler for preflight
+app.options('*', cors());
 
 const sites = new Map();
 
