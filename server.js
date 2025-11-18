@@ -18,7 +18,13 @@ if (!ADMIN_TOKEN) {
 }
 
 app.use(express.json());
-app.use(cors({ origin: '*' }));
+// UPDATED CORS - Allow all origins
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'x-admin-token'],
+  credentials: false
+}));
 
 const sites = new Map();
 
