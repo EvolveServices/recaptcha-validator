@@ -30,6 +30,20 @@ app.use(express.json());
 // Explicit OPTIONS handler for preflight
 app.options('*', cors());
 
+// Request logging middleware - MUST be after body parsers but before routes
+app.use((req, res, next) => {
+  console.log('----------------------------');
+  console.log('Incoming Request:');
+  console.log('  Method:', req.method);
+  console.log('  Path:', req.path);
+  console.log('  URL:', req.url);
+  console.log('  Original URL:', req.originalUrl);
+  console.log('  Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('  Body:', JSON.stringify(req.body, null, 2));
+  console.log('----------------------------');
+  next();
+});
+
 const sites = new Map();
 
 app.get('/', (req, res) => {
@@ -101,6 +115,26 @@ app.post('/api/verify', async (req, res) => {
     console.error('Error:', error.message);
     res.status(500).json({ success: false, error: 'Verification failed' });
   }
+});
+
+// 404 handler - MUST be after all routes
+app.use((req, res) => {
+  console.error('404 NOT FOUND:');
+  console.error('  Method:', req.method);
+  console.error('  Path:', req.path);
+  console.error('  URL:', req.url);
+  console.error('  Original URL:', req.originalUrl);
+  console.error('Available routes:');
+  console.error('  GET /');
+  console.error('  GET /health');
+  console.error('  POST /api/admin/register');
+  console.error('  GET /api/admin/sites');
+  console.error('  POST /api/verify');
+  res.status(404).json({
+    error: 'Not Found',
+    path: req.path,
+    message: 'The requested endpoint does not exist'
+  });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
