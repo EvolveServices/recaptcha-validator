@@ -32,15 +32,28 @@ app.options('*', cors());
 
 // Request logging middleware - MUST be after body parsers but before routes
 app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
   console.log('----------------------------');
-  console.log('Incoming Request:');
+  console.log(`[${timestamp}] Incoming Request:`);
   console.log('  Method:', req.method);
   console.log('  Path:', req.path);
   console.log('  URL:', req.url);
   console.log('  Original URL:', req.originalUrl);
   console.log('  Headers:', JSON.stringify(req.headers, null, 2));
   console.log('  Body:', JSON.stringify(req.body, null, 2));
+  console.log('  Remote Address:', req.ip || req.connection.remoteAddress);
   console.log('----------------------------');
+
+  // Log response
+  const originalSend = res.send;
+  res.send = function(data) {
+    console.log(`[${timestamp}] Response for ${req.method} ${req.path}:`);
+    console.log('  Status:', res.statusCode);
+    console.log('  Body:', typeof data === 'string' ? data : JSON.stringify(data));
+    console.log('----------------------------');
+    originalSend.call(this, data);
+  };
+
   next();
 });
 
